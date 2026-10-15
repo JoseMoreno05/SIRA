@@ -1,3 +1,11 @@
+Categoria elegida: Best use for gemma 4
+Nombre de participantes:
+-Fatima Gisell Castellanos Flores
+-Jose Israel Moreno Aleman
+-Arthemisa Nicte Ha Nettel Cabello
+-Bianca Guadalupe Campos Chillopa
+-Victor Hugo Fuentes Esteban
+
 # SIRA · Sistema Inteligente de Retención Académica
 
 SIRA lee los kárdex de los tutorados desde el portal docente. Con esos datos le avisa al tutor quién necesita intervención y calcula la demanda real de cada materia. Al final, Gemma 4 redacta la propuesta de oferta intersemestral y SIRA verifica cada cifra antes de emitir el borrador del oficio.
