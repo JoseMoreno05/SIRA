@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% from "_macros.html" import nivel, icono %}
+{% block titulo %}Mis tutorados{% endblock %}
+{% block contenido %}
+{% set c = panel.conteo %}
+{% set total = c.rojo + c.amarillo + c.verde %}
+
+{% if total == 0 %}
+  <h1>Sincroniza tus tutorados para ver quién necesita apoyo</h1>
+  <p class="entrada">SIRA abrirá tu listado de tutorados en el portal docente y leerá cada kárdex por ti. Tarda menos de un minuto.</p>
+{% elif c.rojo %}
+  <h1>{{ c.rojo }} {{ 'alumno necesita' if c.rojo == 1 else 'alumnos necesitan' }} intervención inmediata</h1>
+  <p class="entrada">De tus {{ total }} tutorados, {{ c.amarillo }} requieren seguimiento y {{ c.verde }} no tienen alertas. Empieza por los primeros de la lista.</p>
+{% else %}
+  <h1>Ningún tutorado requiere intervención inmediata</h1>
+  <p class="entrada">{{ c.amarillo }} de tus {{ total }} tutorados requieren seguimiento.</p>
+{% endif %}
+
+<section class="panel no-imprimir" aria-labelledby="t-sinc" style="margin-top:1.25rem">
+  <h2 id="t-sinc" style="margin-top:0;font-size:1.2rem">Sincronizar con el portal docente</h2>
+  {% if request.query_params.get('sincronizado') and total %}
+    <p class="nota nota--exito" role="status">Sincronización terminada: SIRA leyó {{ total }} kárdex del portal y actualizó el semáforo.</p>
+  {% endif %}
+  {% if s.ultima_sincronizacion %}
+    <p class="discreto">Última sincronización: {{ s.ultima_sincronizacion | fecha }}.</p>
+  {% endif %}
+  <details {% if total == 0 %}open{% endif %} id="detalle-sinc">
+    <summary>{% if total == 0 %}Datos de acceso al portal{% else %}Sincronizar de nuevo{% endif %}</summary>
+    <form id="form-sinc" method="post" action="/tutor/sincronizar" novalidate>
+      <div class="rejilla" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,14rem),1fr));gap:1rem">
+        <div class="campo"><label for="usuario_portal">Usuario del portal</label>
+          <input type="text" id="usuario_portal" name="usuario_portal" value="{{ s.usuario }}" autocomplete="username" required></div>
+        <div class="campo"><label for="contrasena_portal">Contraseña del portal</label>
+          <input type="password" id="contrasena_portal" name="contrasena_portal" autocomplete="current-password" required aria-describedby="ayuda-pass"></div>
+      </div>
+      <p class="ayuda" id="ayuda-pass">SIRA usa tu contraseña solo para esta sesión y no la guarda. En la demo, la contraseña es <code>{{ contrasena_demo }}</code>.</p>
+      <div class="acciones"><button class="boton" type="submit" id="btn-sinc">Sincronizar mis tutorados</button></div>
+    </form>
+  </details>
+  <div class="progreso" id="progreso" hidden>
+    <progress id="barra" max="100" value="0" aria-labelledby="estado-sinc"></progress>
+    <ol class="pasos" aria-hidden="true">
+      <li data-paso="conectando">Iniciar sesión en el portal</li>
+      <li data-paso="listado">Leer tu listado de tutorados</li>
+      <li data-paso="kardex">Leer cada kárdex, uno cada pocos segundos</li>
+      <li data-paso="listo">Calcular el semáforo</li>
+    </ol>
+  </div>
+  <p id="estado-sinc" role="status" aria-live="polite" class="discreto" style="margin:.75rem 0 0"></p>
+</section>
+
+{% if total %}
+<section aria-labelledby="t-dist">
+  <h2 id="t-dist" class="solo-lector">Distribución por nivel</h2>
+  <div class="franja">
+    <div class="franja__barra" aria-hidden="true">
+      {% for n in ['rojo','amarillo','verde'] %}{% if c[n] %}
+        <a class="franja__seg franja__seg--{{ n }}" href="?nivel={{ n }}#lista" tabindex="-1" style="flex:{{ c[n] }}">{{ c[n] }}</a>
+      {% endif %}{% endfor %}
+    </div>
+    <p class="franja__leyenda">
+      {{ nivel('rojo', 'Intervenir ya: ' ~ c.rojo) }}
+      {{ nivel('amarillo', 'Dar seguimiento: ' ~ c.amarillo) }}
+      {{ nivel('verde', 'Sin alerta: ' ~ c.verde) }}
+    </p>
+  </div>
+</section>
+
+<section aria-labelledby="t-lista" id="lista">
+  <h2 id="t-lista">Tutorados en orden de atención</h2>
+  <ul class="filtros" aria-label="Filtrar por nivel">
+    <li><a href="/tutor#lista" {% if not filtro %}aria-current="true"{% endif %}>Todos ({{ total }})</a></li>
+    <li><a href="?nivel=rojo#lista" {% if filtro == 'rojo' %}aria-current="true"{% endif %}>Intervenir ya ({{ c.rojo }})</a></li>
+    <li><a href="?nivel=amarillo#lista" {% if filtro == 'amarillo' %}aria-current="true"{% endif %}>Dar seguimiento ({{ c.amarillo }})</a></li>
+    <li><a href="?nivel=verde#lista" {% if filtro == 'verde' %}aria-current="true"{% endif %}>Sin alerta ({{ c.verde }})</a></li>
+  </ul>
+  <div class="tabla-envoltura">
+    <table>
+      <caption>Ordenados por nivel de riesgo y, dentro de cada nivel, por cuántas materias les bloquea su rezago.</caption>
+      <thead><tr>
+        <th scope="col">Nivel</th><th scope="col">Alumno</th><th scope="col" class="num">Semestre</th>
+        <th scope="col">Motivo principal</th><th scope="col" class="num">Adeuda</th><th scope="col">Seguimiento</th>
+      </tr></thead>
+      <tbody>
+      {% for a in alumnos %}
+        <tr class="fila--{{ a.nivel }}">
+          <td>{{ nivel(a.nivel, a.etiqueta) }}</td>
+          <th scope="row" class="alumno-nombre"><a href="/tutor/alumno/{{ a.seudonimo }}">{{ a.nombre }}</a><span class="sub mono">{{ a.matricula }}</span></th>
+          <td class="num">{{ a.semestre }}</td>
+          <td>{{ a.razones[0] }}{% if a.razones|length > 1 %}<span class="sub">y {{ a.razones|length - 1 }} {{ 'motivo más' if a.razones|length == 2 else 'motivos más' }}</span>{% endif %}</td>
+          <td class="num">{{ a.adeudadas|length }}</td>
+          <td>{% if a.contactado %}Contactado{% elif a.nivel != 'verde' %}<span class="discreto">Pendiente</span>{% else %}<span class="discreto">No requiere</span>{% endif %}</td>
+        </tr>
+      {% else %}
+        <tr><td colspan="6">No hay tutorados en este nivel.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+(() => {
+  const form = document.getElementById('form-sinc');
+  const btn = document.getElementById('btn-sinc');
+  const caja = document.getElementById('progreso');
+  const barra = document.getElementById('barra');
+  const estado = document.getElementById('estado-sinc');
+  const orden = ['conectando', 'listado', 'kardex', 'listo'];
+  let ultimoAnuncio = 0;
+
+  function pintar(e) {
+    const i = orden.indexOf(e.fase);
+    document.querySelectorAll('.pasos li').forEach((li, j) => {
+      li.dataset.estado = j < i || e.fase === 'listo' ? 'hecho' : (j === i ? 'activo' : '');
+    });
+    const pct = e.fase === 'listo' ? 100 : e.total ? Math.round(10 + 85 * e.hechos / e.total) : (i > 0 ? 8 : 3);
+    barra.value = pct;
+    // Anuncia al lector de pantalla cada 25 % para no saturarlo
+    if (e.fase !== 'kardex' || pct - ultimoAnuncio >= 25) { estado.textContent = e.mensaje; ultimoAnuncio = pct; }
+  }
+
+  async function consultar() {
+    const r = await fetch('/api/sincronizacion');
+    const e = await r.json();
+    pintar(e);
+    if (e.fase === 'listo') {
+      estado.textContent = e.mensaje + '. Actualizando la lista…';
+      setTimeout(() => location.assign('/tutor?sincronizado=1#lista'), 900);
+    } else if (e.fase === 'error') {
+      estado.textContent = e.mensaje;
+      estado.className = 'nota nota--error';
+      btn.disabled = false; caja.hidden = true;
+    } else {
+      setTimeout(consultar, 400);
+    }
+  }
+
+  form?.addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    if (!form.contrasena_portal.value) {
+      estado.className = 'nota nota--error';
+      estado.textContent = 'Escribe tu contraseña del portal para sincronizar.';
+      form.contrasena_portal.focus();
+      return;
+    }
+    btn.disabled = true; caja.hidden = false; estado.className = 'discreto';
+    const r = await fetch(form.action, { method: 'POST', body: new FormData(form) });
+    const d = await r.json();
+    form.contrasena_portal.value = '';
+    if (!d.ok) { estado.className = 'nota nota--error'; estado.textContent = d.mensaje; btn.disabled = false; caja.hidden = true; return; }
+    consultar();
+  });
+})();
+</script>
+{% endblock %}

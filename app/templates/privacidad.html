@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block titulo %}Privacidad{% endblock %}
+{% block contenido %}
+<h1>Gemma nunca recibe nombres ni matrículas</h1>
+<p class="entrada">SIRA separa a quién pertenece cada dato de lo que se analiza. Esta página muestra exactamente qué sale hacia Gemma 4.</p>
+
+<div class="rejilla" style="margin-top:1.5rem">
+  <section class="panel" aria-labelledby="t-recoleccion">
+    <h2 id="t-recoleccion" style="margin-top:0;font-size:1.2rem">Cómo se recolectan los datos</h2>
+    <ul>
+      <li>El tutor sincroniza con su propia cuenta del portal; SIRA solo ve lo que él ya puede ver.</li>
+      <li>La contraseña se usa en esa sesión y no se guarda.</li>
+      <li>El conector respeta <code>robots.txt</code>, espera entre páginas y se identifica como SIRA.</li>
+      <li>Si el portal pide un CAPTCHA o bloquea el acceso, el conector se detiene; nunca intenta evadirlo.</li>
+      <li>Solo se extrae clave, periodo, tipo, calificación y estatus de cada materia.</li>
+    </ul>
+  </section>
+  <section class="panel" aria-labelledby="t-seud">
+    <h2 id="t-seud" style="margin-top:0;font-size:1.2rem">Seudonimización</h2>
+    <p>Cada matrícula se convierte en un seudónimo con HMAC-SHA256 y una sal secreta del servidor. Por ejemplo, la matrícula ficticia <span class="mono">259000123</span> se guarda como <span class="mono">{{ ejemplo }}</span>.</p>
+    <p>El nombre y la matrícula viven en una tabla aparte que solo usa la pantalla del tutor. Ninguna consulta que alimenta a Gemma la lee.</p>
+  </section>
+</div>
+
+<section aria-labelledby="t-usos">
+  <h2 id="t-usos">Qué recibe Gemma en cada uso</h2>
+  <div class="tabla-envoltura">
+    <table>
+      <thead><tr><th scope="col">Uso</th><th scope="col">Lo que recibe</th><th scope="col">Lo que nunca recibe</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">Interpretar un kárdex si el portal cambió su HTML</th><td>Solo la tabla de calificaciones, después de quitar el bloque con nombre y matrícula</td><td>Nombre, matrícula, datos de contacto</td></tr>
+        <tr><th scope="row">Sugerir una intervención al tutor</th><td>Semestre, nivel de riesgo, materias adeudadas con sus oportunidades y promedio</td><td>Nombre, matrícula, notas del tutor</td></tr>
+        <tr><th scope="row">Proponer la oferta intersemestral</th><td>Cifras agregadas por materia y restricciones de grupos y cupo</td><td>Cualquier dato de un alumno individual</td></tr>
+        <tr><th scope="row">Redactar la propuesta semestral</th><td>Demanda esperada, recursamientos y grupos por materia, ya calculados por SIRA</td><td>Cualquier dato de un alumno individual, incluida su carga sugerida</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section aria-labelledby="t-json">
+  <h2 id="t-json">La entrada exacta de la propuesta</h2>
+  {% if entrada %}
+    <p>Este es el JSON que SIRA envía a Gemma 4 para redactar la propuesta intersemestral con los datos actuales.</p>
+    <pre class="json" tabindex="0" aria-label="Entrada JSON enviada a Gemma"><code>{{ entrada }}</code></pre>
+  {% else %}
+    <p class="discreto">Aparecerá aquí cuando haya tutores sincronizados.</p>
+  {% endif %}
+</section>
+
+<section aria-labelledby="t-api">
+  <h2 id="t-api">Antes de usar datos reales</h2>
+  <p>La demo usa la API de Google AI Studio. Antes de un piloto con datos reales, revisen los términos de uso del plan contratado sobre cómo se tratan las entradas, o ejecuten Gemma 4 en un servidor de la institución: es un modelo abierto con licencia Apache 2.0 y el prompt no cambia.</p>
+</section>
+{% endblock %}

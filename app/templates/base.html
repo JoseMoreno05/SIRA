@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}SIRA{% endblock %} · Sistema Inteligente de Retención Académica</title>
+  <meta name="description" content="SIRA detecta alumnos en riesgo, calcula la demanda por materia y propone la oferta intersemestral.">
+  <link rel="stylesheet" href="/static/sira.css">
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+</head>
+<body>
+  <a class="saltar" href="#contenido">Saltar al contenido</a>
+  <header class="cabecera">
+    <div class="cabecera__dentro">
+      <a class="marca" href="/" aria-label="SIRA, Sistema Inteligente de Retención Académica, ir al inicio">
+        <span class="marca__sigla" aria-hidden="true">SIRA</span>
+        <span class="marca__nombre" aria-hidden="true">Sistema Inteligente de Retención Académica</span>
+      </a>
+      {% set ruta = request.url.path %}
+      <nav class="nav" aria-label="Principal">
+        {% if s.rol == 'tutor' %}
+          <a href="/tutor" {% if ruta.startswith('/tutor') %}aria-current="page"{% endif %}>Mis tutorados</a>
+        {% elif s.rol == 'gestor' %}
+          <a href="/gestor" {% if ruta == '/gestor' %}aria-current="page"{% endif %}>Demanda por materia</a>
+          <a href="/gestor/propuesta" {% if ruta.startswith('/gestor/propuesta') %}aria-current="page"{% endif %}>Propuesta intersemestral</a>
+          <a href="/gestor/semestral" {% if ruta.startswith('/gestor/semestral') %}aria-current="page"{% endif %}>Propuesta semestral</a>
+        {% endif %}
+        <a href="/privacidad" {% if ruta == '/privacidad' %}aria-current="page"{% endif %}>Privacidad</a>
+        <a href="/accesibilidad" {% if ruta == '/accesibilidad' %}aria-current="page"{% endif %}>Accesibilidad</a>
+      </nav>
+      {% if s.rol %}
+      <div class="usuario"><span>{{ s.nombre }}</span><a href="/salir">Cambiar de perfil</a></div>
+      {% endif %}
+    </div>
+  </header>
+  <p class="aviso-demo">Prototipo de demostración: todos los alumnos y calificaciones son sintéticos.</p>
+  <main id="contenido" tabindex="-1">
+    {% block contenido %}{% endblock %}
+  </main>
+  <footer class="pie">
+    <div class="pie__dentro">
+      <span>SIRA es un prototipo de código abierto con licencia MIT.</span>
+      <span>{% if gemma_activo() %}Gemma 4 activo: {{ modelo }}{% else %}Gemma 4 sin configurar: se usan plantillas de respaldo{% endif %}</span>
+    </div>
+  </footer>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

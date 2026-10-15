@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block titulo %}Demanda por materia{% endblock %}
+{% block contenido %}
+{% set cob = r.cobertura %}
+{% set top = r.materias[0] if r.materias else none %}
+{% set suficientes = r.materias | selectattr('suficiente') | list %}
+
+{% if top %}
+  <h1>{{ top.nombre }} es la materia que más alumnos destraba</h1>
+  <p class="entrada">La adeudan {{ top.demanda_directa }} alumnos ({{ top.urgencia }} en riesgo alto) y bloquea {{ top.bloqueo }} materias posteriores. {{ suficientes|length }} materias alcanzan el cupo mínimo de {{ r.parametros.cupo_minimo }} para abrir grupo.</p>
+{% else %}
+  <h1>Aún no hay datos de demanda</h1>
+  <p class="entrada">La demanda se forma con los kárdex que cada tutor sincroniza desde el portal docente.</p>
+{% endif %}
+
+<section class="panel" aria-labelledby="t-cob" style="margin-top:1.25rem">
+  <h2 id="t-cob" style="margin-top:0;font-size:1.2rem">Alcance de los datos</h2>
+  {% if cob.tutores_sincronizados < cob.tutores_total %}
+    <p class="nota nota--alerta">Datos de {{ cob.tutores_sincronizados }} de {{ cob.tutores_total }} tutores ({{ cob.alumnos }} alumnos). Mientras falten tutores, esta tabla es una muestra parcial de la carrera.</p>
+  {% else %}
+    <p class="nota nota--exito">Datos completos: {{ cob.tutores_total }} de {{ cob.tutores_total }} tutores y {{ cob.alumnos }} alumnos sincronizados.</p>
+  {% endif %}
+  <details>
+    <summary>Ver la última sincronización de cada tutor</summary>
+    <ul>{% for t in cob.tutores %}<li>{{ t.nombre }}: {% if t.ultima_sincronizacion %}{{ t.ultima_sincronizacion | fecha }}{% else %}sin sincronizar{% endif %}</li>{% endfor %}</ul>
+  </details>
+  <div class="acciones">
+    <button class="boton boton--secundario" type="button" id="btn-todos">Simular que todos los tutores sincronizan</button>
+    <span id="estado-todos" role="status" aria-live="polite" class="discreto"></span>
+  </div>
+  <p class="ayuda">Solo en la demo. En la institución, cada tutor sincroniza con su propia cuenta desde su panel.</p>
+</section>
+
+{% if r.materias %}
+<section aria-labelledby="t-rank">
+  <h2 id="t-rank">Materias ordenadas por impacto</h2>
+  <p>El índice combina tres datos: cuántos alumnos adeudan la materia (D), cuántas materias posteriores bloquea (B) y cuántos de esos alumnos están en riesgo alto (U). Fórmula: I = D × (1 + β·B) × (1 + γ·U/D).</p>
+  <form method="get" action="/gestor" class="acciones" aria-label="Ajustar pesos del índice">
+    <div><label for="beta">Peso de la seriación (β)</label>
+      <input type="number" id="beta" name="beta" min="0" max="3" step="0.1" value="{{ r.parametros.beta }}" style="width:7rem"></div>
+    <div><label for="gamma">Peso del riesgo alto (γ)</label>
+      <input type="number" id="gamma" name="gamma" min="0" max="3" step="0.1" value="{{ r.parametros.gamma }}" style="width:7rem"></div>
+    <button class="boton boton--secundario" type="submit" style="align-self:end">Recalcular el orden</button>
+  </form>
+
+  <div class="tabla-envoltura">
+    <table>
+      <caption>Demanda total = alumnos que la adeudan + alumnos que probablemente no la acrediten este periodo (tasa histórica de los últimos 3 periodos).</caption>
+      <thead><tr>
+        <th scope="col" class="num">Lugar</th><th scope="col">Materia</th><th scope="col">Índice de impacto</th>
+        <th scope="col" class="num">Adeudan</th><th scope="col" class="num">En riesgo alto</th><th scope="col" class="num">Bloquea</th>
+        <th scope="col" class="num">Proyectados</th><th scope="col" class="num">Demanda total</th><th scope="col">¿Abre grupo?</th>
+      </tr></thead>
+      <tbody>
+      {% for m in r.materias %}
+        <tr>
+          <td class="num">{{ m.posicion }}</td>
+          <th scope="row">{{ m.nombre }}<span class="sub"><span class="mono">{{ m.clave }}</span>, semestre {{ m.semestre }}</span></th>
+          <td><div class="barra-indice"><span class="barra-indice__pista" aria-hidden="true"><span class="barra-indice__valor" style="display:block;width:{{ (100 * m.indice / maximo)|round(1) }}%"></span></span><span class="num">{{ '%.1f' % m.indice }}</span></div></td>
+          <td class="num">{{ m.demanda_directa }}</td>
+          <td class="num">{{ m.urgencia }}</td>
+          <td class="num">{{ m.bloqueo }}</td>
+          <td class="num">{{ m.demanda_proyectada }}<span class="sub">de {{ m.cursando }} cursando</span></td>
+          <td class="num"><strong>{{ m.demanda_total }}</strong></td>
+          <td>{% if m.suficiente %}<span class="etiqueta">Sí, {{ m.grupos_sugeridos }} {{ 'grupo' if m.grupos_sugeridos == 1 else 'grupos' }}</span>{% else %}<span class="etiqueta etiqueta--no">Demanda insuficiente</span>{% endif %}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="acciones">
+    <form method="post" action="/gestor/propuesta"><button class="boton" type="submit">Generar propuesta intersemestral</button></form>
+    <span class="discreto">{% if gemma_activo() %}Gemma 4 ({{ modelo_oficio }}) redactará la propuesta; SIRA verificará cada cifra.{% else %}Sin Gemma configurado se usará la plantilla de respaldo.{% endif %}</span>
+  </div>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+(() => {
+  const btn = document.getElementById('btn-todos');
+  const estado = document.getElementById('estado-todos');
+  async function revisar() {
+    const e = await (await fetch('/api/sincronizacion-demo')).json();
+    estado.textContent = `Tutores sincronizados: ${e.sincronizados} de ${e.total}`;
+    if (e.activo) setTimeout(revisar, 500); else { estado.textContent += '. Actualizando…'; setTimeout(() => location.reload(), 700); }
+  }
+  btn?.addEventListener('click', async () => {
+    btn.disabled = true; estado.textContent = 'Sincronizando a los tutores con la réplica del portal…';
+    await fetch('/gestor/sincronizar-demo', { method: 'POST' });
+    setTimeout(revisar, 600);
+  });
+})();
+</script>
+{% endblock %}

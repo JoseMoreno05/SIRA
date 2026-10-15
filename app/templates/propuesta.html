@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% from "_macros.html" import check %}
+{% block titulo %}Propuesta intersemestral{% endblock %}
+{% block contenido %}
+{% if not p %}
+  <h1>Aún no hay una propuesta intersemestral</h1>
+  <p class="entrada">Genera la propuesta desde la tabla de demanda. {% if gemma_activo() %}Gemma 4 la redactará y SIRA verificará cada cifra.{% else %}Sin Gemma configurado, SIRA usará su plantilla de respaldo.{% endif %}</p>
+  <div class="acciones">
+    {% if cobertura.alumnos %}<form method="post" action="/gestor/propuesta"><button class="boton" type="submit">Generar propuesta intersemestral</button></form>{% endif %}
+    <a class="boton boton--secundario" href="/gestor">Ver la demanda por materia</a>
+  </div>
+{% else %}
+  {% set c = p.contenido %}
+  {% set v = p.validacion %}
+  {% set todo_ok = v.verificaciones | selectattr('ok') | list | length == v.verificaciones | length %}
+  <h1>Borrador de propuesta: {{ c.materias|length }} materias, {{ c.materias | sum(attribute='grupos') }} grupos</h1>
+  <p class="entrada">{% if p.origen == 'gemma' %}Redactado por Gemma 4 y verificado por SIRA contra la base{% else %}Redactado con la plantilla de SIRA{% endif %} el {{ p.creada | fecha }}. Revísalo antes de enviarlo.</p>
+
+  <div class="rejilla rejilla--detalle" style="margin-top:1.5rem;align-items:start">
+    <article class="oficio" aria-labelledby="t-oficio">
+      <div class="oficio__membrete"><span>Jefatura del programa educativo</span><span>{{ p.creada[:10] }}</span></div>
+      <p class="oficio__borrador">Borrador para revisión, no es un documento oficial</p>
+      <h2 id="t-oficio">Propuesta de oferta: {{ c.intersemestral }}</h2>
+      <p>{{ c.resumen }}</p>
+      <div class="tabla-envoltura" style="border:0">
+        <table>
+          <caption class="solo-lector">Materias propuestas</caption>
+          <thead><tr><th scope="col">Materia</th><th scope="col" class="num">Grupos</th><th scope="col" class="num">Cupo estimado</th><th scope="col" class="num">En riesgo alto</th><th scope="col">Prioridad</th></tr></thead>
+          <tbody>
+          {% for m in c.materias %}
+            <tr><th scope="row">{{ c.datos[m.clave].nombre }}<span class="sub mono">{{ m.clave }}</span></th>
+              <td class="num">{{ m.grupos }}</td><td class="num">{{ m.cupo_estimado }}</td><td class="num">{{ c.datos[m.clave].urgencia }}</td>
+              <td>{{ m.prioridad|capitalize }}</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <h3>Justificación por materia</h3>
+      <dl>
+        {% for m in c.materias %}<dt>{{ c.datos[m.clave].nombre }}</dt><dd>{{ m.justificacion }}</dd>{% endfor %}
+      </dl>
+      {% if c.descartadas %}
+      <h3>Materias no propuestas</h3>
+      <ul>{% for d in c.descartadas[:8] %}<li><span class="mono">{{ d.clave }}</span>: {{ d.motivo }}</li>{% endfor %}</ul>
+      {% endif %}
+      <p class="discreto">Datos de {{ c.cobertura.tutores_sincronizados }} de {{ c.cobertura.tutores_total }} tutores y {{ c.cobertura.alumnos }} alumnos.</p>
+      <p class="oficio__firma">Vo. Bo. Jefatura del programa educativo</p>
+    </article>
+
+    <div>
+      <section class="panel" aria-labelledby="t-desc">
+        <h2 id="t-desc" style="margin-top:0;font-size:1.2rem">Descargar el oficio</h2>
+        <div class="acciones" style="margin:.25rem 0 0">
+          <a class="boton" href="/gestor/propuesta/oficio.pdf" download>Descargar PDF</a>
+          <a class="boton boton--secundario" href="/gestor/propuesta/oficio.docx" download>Descargar Word</a>
+        </div>
+        <form method="post" action="/gestor/propuesta" style="margin-top:.75rem">
+          <button class="boton boton--secundario" type="submit">Generar de nuevo</button>
+        </form>
+      </section>
+
+      <section class="panel" aria-labelledby="t-ver">
+        <h2 id="t-ver" style="margin-top:0;font-size:1.2rem">Verificaciones antes de emitir</h2>
+        <p class="discreto">{% if todo_ok %}Las {{ v.verificaciones|length }} verificaciones pasaron.{% else %}Hay verificaciones que no pasaron.{% endif %}
+          {% if p.origen == 'gemma' %}Modelo: <span class="mono">{{ p.modelo }}</span>.{% endif %}</p>
+        <ul class="checks">
+          {% for ch in v.verificaciones %}
+            <li>{{ check(ch.ok) }}<div><b>{{ ch.nombre }}{% if not ch.ok %} (no pasó){% endif %}</b><span class="discreto">{{ ch.detalle }}</span></div></li>
+          {% endfor %}
+        </ul>
+        {% if v.intentos_gemma %}
+          <details><summary>Intentos de Gemma ({{ v.intentos_gemma|length }})</summary>
+            <ol>{% for it in v.intentos_gemma %}<li>{% if it.ok %}Pasó todas las verificaciones.{% else %}No pasó: {% if it.detalle %}{{ it.detalle }}{% else %}{{ it.verificaciones | rejectattr('ok') | map(attribute='nombre') | join(', ') }}{% endif %}. {% if not loop.last %}Se le pidió corregir.{% endif %}{% endif %}</li>{% endfor %}</ol>
+          </details>
+        {% endif %}
+      </section>
+
+      <section class="panel" aria-labelledby="t-prueba" id="prueba">
+        <h2 id="t-prueba" style="margin-top:0;font-size:1.2rem">Comprueba la validación</h2>
+        <p class="discreto">Agrega una cifra inventada a la primera justificación («87 alumnos ya se preinscribieron») y vuelve a validar.</p>
+        <a class="boton boton--secundario" href="/gestor/propuesta?prueba=1#prueba">Probar con una cifra inventada</a>
+        {% if rechazo %}
+          <div role="status" style="margin-top:1rem">
+            <ul class="checks">
+              {% for ch in rechazo if not ch.ok %}
+                <li>{{ check(false) }}<div><b>{{ ch.nombre }}: rechazada</b><span class="discreto">{{ ch.detalle }}</span></div></li>
+              {% endfor %}
+            </ul>
+            <p class="ayuda">Una propuesta con esta falla nunca llega al oficio: SIRA pide a Gemma que la corrija y, si persiste, usa la plantilla.</p>
+          </div>
+        {% endif %}
+      </section>
+    </div>
+  </div>
+{% endif %}
+{% endblock %}

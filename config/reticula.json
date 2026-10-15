@@ -1,0 +1,53 @@
+{
+  "programa": "Ingeniería en Computación (retícula de demostración)",
+  "nota": "Retícula simplificada y ficticia para el prototipo. Sustituir por el plan de estudios oficial en el piloto.",
+  "materias": [
+    {"clave": "MAT101", "nombre": "Cálculo Diferencial", "semestre": 1, "creditos": 8, "prerrequisitos": [], "dificultad": 0.30},
+    {"clave": "MAT102", "nombre": "Álgebra Superior", "semestre": 1, "creditos": 8, "prerrequisitos": [], "dificultad": 0.22},
+    {"clave": "PRG101", "nombre": "Fundamentos de Programación", "semestre": 1, "creditos": 8, "prerrequisitos": [], "dificultad": 0.20},
+    {"clave": "FIS101", "nombre": "Física Mecánica", "semestre": 1, "creditos": 8, "prerrequisitos": [], "dificultad": 0.25},
+    {"clave": "HUM101", "nombre": "Comunicación Oral y Escrita", "semestre": 1, "creditos": 6, "prerrequisitos": [], "dificultad": 0.05},
+
+    {"clave": "MAT201", "nombre": "Cálculo Integral", "semestre": 2, "creditos": 8, "prerrequisitos": ["MAT101"], "dificultad": 0.32},
+    {"clave": "MAT202", "nombre": "Álgebra Lineal", "semestre": 2, "creditos": 8, "prerrequisitos": ["MAT102"], "dificultad": 0.24},
+    {"clave": "PRG201", "nombre": "Programación Orientada a Objetos", "semestre": 2, "creditos": 8, "prerrequisitos": ["PRG101"], "dificultad": 0.18},
+    {"clave": "FIS201", "nombre": "Electricidad y Magnetismo", "semestre": 2, "creditos": 8, "prerrequisitos": ["FIS101"], "dificultad": 0.26},
+    {"clave": "MAT203", "nombre": "Matemáticas Discretas", "semestre": 2, "creditos": 6, "prerrequisitos": [], "dificultad": 0.18},
+
+    {"clave": "MAT301", "nombre": "Cálculo Vectorial", "semestre": 3, "creditos": 8, "prerrequisitos": ["MAT201"], "dificultad": 0.28},
+    {"clave": "PRG301", "nombre": "Estructuras de Datos", "semestre": 3, "creditos": 8, "prerrequisitos": ["PRG201"], "dificultad": 0.24},
+    {"clave": "EST301", "nombre": "Probabilidad", "semestre": 3, "creditos": 6, "prerrequisitos": ["MAT201"], "dificultad": 0.22},
+    {"clave": "ELE301", "nombre": "Circuitos Eléctricos", "semestre": 3, "creditos": 8, "prerrequisitos": ["FIS201"], "dificultad": 0.22},
+    {"clave": "HUM301", "nombre": "Ética Profesional", "semestre": 3, "creditos": 4, "prerrequisitos": [], "dificultad": 0.04},
+
+    {"clave": "MAT401", "nombre": "Ecuaciones Diferenciales", "semestre": 4, "creditos": 8, "prerrequisitos": ["MAT301"], "dificultad": 0.30},
+    {"clave": "PRG401", "nombre": "Análisis de Algoritmos", "semestre": 4, "creditos": 8, "prerrequisitos": ["PRG301", "MAT203"], "dificultad": 0.22},
+    {"clave": "EST401", "nombre": "Estadística Inferencial", "semestre": 4, "creditos": 6, "prerrequisitos": ["EST301"], "dificultad": 0.18},
+    {"clave": "ELE401", "nombre": "Electrónica Digital", "semestre": 4, "creditos": 8, "prerrequisitos": ["ELE301"], "dificultad": 0.20},
+    {"clave": "BD401", "nombre": "Bases de Datos", "semestre": 4, "creditos": 8, "prerrequisitos": ["PRG301"], "dificultad": 0.12},
+
+    {"clave": "MAT501", "nombre": "Métodos Numéricos", "semestre": 5, "creditos": 6, "prerrequisitos": ["MAT401", "PRG201"], "dificultad": 0.20},
+    {"clave": "ARQ501", "nombre": "Arquitectura de Computadoras", "semestre": 5, "creditos": 8, "prerrequisitos": ["ELE401"], "dificultad": 0.18},
+    {"clave": "SO501", "nombre": "Sistemas Operativos", "semestre": 5, "creditos": 8, "prerrequisitos": ["PRG301"], "dificultad": 0.16},
+    {"clave": "BD501", "nombre": "Bases de Datos Avanzadas", "semestre": 5, "creditos": 6, "prerrequisitos": ["BD401"], "dificultad": 0.10},
+    {"clave": "ISW501", "nombre": "Ingeniería de Software", "semestre": 5, "creditos": 8, "prerrequisitos": ["BD401"], "dificultad": 0.08},
+
+    {"clave": "RED601", "nombre": "Redes de Computadoras", "semestre": 6, "creditos": 8, "prerrequisitos": ["SO501"], "dificultad": 0.15},
+    {"clave": "LEN601", "nombre": "Lenguajes y Autómatas", "semestre": 6, "creditos": 8, "prerrequisitos": ["PRG401"], "dificultad": 0.24},
+    {"clave": "SIM601", "nombre": "Simulación", "semestre": 6, "creditos": 6, "prerrequisitos": ["EST401", "MAT501"], "dificultad": 0.16},
+    {"clave": "ISW601", "nombre": "Gestión de Proyectos de Software", "semestre": 6, "creditos": 6, "prerrequisitos": ["ISW501"], "dificultad": 0.06},
+    {"clave": "ARQ601", "nombre": "Sistemas Embebidos", "semestre": 6, "creditos": 8, "prerrequisitos": ["ARQ501"], "dificultad": 0.15},
+
+    {"clave": "RED701", "nombre": "Seguridad Informática", "semestre": 7, "creditos": 6, "prerrequisitos": ["RED601"], "dificultad": 0.12},
+    {"clave": "LEN701", "nombre": "Compiladores", "semestre": 7, "creditos": 8, "prerrequisitos": ["LEN601"], "dificultad": 0.20},
+    {"clave": "IA701", "nombre": "Inteligencia Artificial", "semestre": 7, "creditos": 8, "prerrequisitos": ["PRG401", "EST401"], "dificultad": 0.16},
+    {"clave": "WEB701", "nombre": "Desarrollo Web", "semestre": 7, "creditos": 6, "prerrequisitos": ["BD501"], "dificultad": 0.08},
+    {"clave": "INV701", "nombre": "Metodología de la Investigación", "semestre": 7, "creditos": 4, "prerrequisitos": [], "dificultad": 0.05},
+
+    {"clave": "SD801", "nombre": "Sistemas Distribuidos", "semestre": 8, "creditos": 8, "prerrequisitos": ["RED601", "SO501"], "dificultad": 0.14},
+    {"clave": "IA801", "nombre": "Aprendizaje Automático", "semestre": 8, "creditos": 8, "prerrequisitos": ["IA701"], "dificultad": 0.14},
+    {"clave": "TES801", "nombre": "Seminario de Titulación", "semestre": 8, "creditos": 6, "prerrequisitos": ["INV701"], "dificultad": 0.06},
+    {"clave": "RES801", "nombre": "Residencia Profesional", "semestre": 8, "creditos": 10, "prerrequisitos": ["ISW601"], "dificultad": 0.03},
+    {"clave": "OPT801", "nombre": "Optativa Profesional", "semestre": 8, "creditos": 6, "prerrequisitos": [], "dificultad": 0.05}
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "fecha": "2026-10-15",
+  "paginas": [
+    {
+      "nombre": "Inicio",
+      "ruta": "/",
+      "violaciones": 0,
+      "detalle": [],
+      "desborde_320": false,
+      "foco_visible": true
+    },
+    {
+      "nombre": "Panel del tutor",
+      "ruta": "/tutor",
+      "violaciones": 0,
+      "detalle": [],
+      "desborde_320": false,
+      "foco_visible": true
+    },
+    {
+      "nombre": "Detalle de alumno",
+      "ruta": "/tutor/alumno/A-9a4dc2ed91",
+      "violaciones": 0,
+      "detalle": [],
+      "desborde_320": false,
+      "foco_visible": true
+    },
+    {
+      "nombre": "Demanda por materia",
+      "ruta": "/gestor",
+      "violaciones": 0,
+      "detalle": [],
+      "desborde_320": false,
+      "foco_visible": true
+    },
+    {
+      "nombre": "Propuesta intersemestral",
+      "ruta": "/gestor/propuesta",
+      "violaciones": 0,
+      "detalle": [],
+      "desborde_320": false,
+      "foco_visible": true
+    },
+    {
+      "nombre": "Propuesta semestral",
+      "ruta": "/gestor/semestral",
+      "violaciones": 0,
+      "detalle": [],
+      "desborde_320": false,
+      "foco_visible": true
+    },
+    {
+      "nombre": "Privacidad",
+      "ruta": "/privacidad",
+      "violaciones": 0,
+      "detalle": [],
+      "desborde_320": false,
+      "foco_visible": true
+    },
+    {
+      "nombre": "Accesibilidad",
+      "ruta": "/accesibilidad",
+      "violaciones": 0,
+      "detalle": [],
+      "desborde_320": false,
+      "foco_visible": true
+    }
+  ],
+  "axe_version": "4.14.0"
+}

@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% from "_macros.html" import nivel %}
+{% block titulo %}{{ a.nombre }}{% endblock %}
+{% block contenido %}
+<p><a href="/tutor#lista">Volver a mis tutorados</a></p>
+<h1>{{ a.nombre }}</h1>
+<p class="entrada">Matrícula <span class="mono">{{ a.matricula }}</span>, semestre {{ a.semestre }}. Promedio {{ a.promedio if a.promedio is not none else 'sin datos' }}, {{ a.creditos }} créditos aprobados.</p>
+
+<div class="rejilla rejilla--detalle" style="margin-top:1.5rem">
+  <div>
+    <section class="panel" aria-labelledby="t-por-que">
+      <h2 id="t-por-que" style="margin-top:0;font-size:1.2rem">Por qué está en este nivel</h2>
+      <p>{{ nivel(a.nivel, a.etiqueta) }}</p>
+      <ul>{% for r in a.razones %}<li>{{ r }}</li>{% endfor %}</ul>
+      <p class="ayuda">Reglas de demostración, configurables por la institución en <code>config/reglas.json</code>.</p>
+    </section>
+
+    <section aria-labelledby="t-adeuda">
+      <h2 id="t-adeuda">Materias adeudadas</h2>
+      {% if a.adeudadas %}
+      <div class="tabla-envoltura">
+        <table>
+          <caption>Oportunidades usadas de {{ max_op }} y materias que dependen de cada una en la retícula.</caption>
+          <thead><tr><th scope="col">Materia</th><th scope="col">Oportunidades</th><th scope="col" class="num">Bloquea</th><th scope="col">Situación</th></tr></thead>
+          <tbody>
+          {% for m in a.adeudadas %}
+            <tr>
+              <th scope="row">{{ m.nombre }}<span class="sub mono">{{ m.clave }}</span></th>
+              <td>{{ m.usadas }} de {{ max_op }}{% if m.restantes <= 1 %} <strong style="color:var(--rojo)">{{ 'última' if m.restantes == 0 and m.en_curso else 'queda 1' }}</strong>{% endif %}</td>
+              <td class="num">{{ m.bloqueo }} {{ 'materia' if m.bloqueo == 1 else 'materias' }}</td>
+              <td>{% if m.en_curso %}La cursa este periodo{% else %}Pendiente: candidata al intersemestral{% endif %}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}<p>No adeuda materias.</p>{% endif %}
+    </section>
+
+    <section aria-labelledby="t-carga">
+      <h2 id="t-carga">Carga sugerida: {{ semestre_siguiente|lower }}</h2>
+      {% if carga.materias %}
+      <p>{{ carga.materias|length }} {{ 'materia' if carga.materias|length == 1 else 'materias' }}, {{ carga.creditos }} créditos.
+        {% if carga.carga_reducida %}Carga reducida a {{ carga.limite_materias }} materias por estar en riesgo alto.{% endif %}</p>
+      <div class="tabla-envoltura">
+        <table>
+          <caption>Supone que acredita lo que cursa este periodo; las condicionadas dependen de ello.</caption>
+          <thead><tr><th scope="col">Materia</th><th scope="col">Tipo</th><th scope="col">Por qué</th></tr></thead>
+          <tbody>
+          {% for m in carga.materias %}
+            <tr>
+              <th scope="row">{{ m.nombre }}<span class="sub"><span class="mono">{{ m.clave }}</span>, {{ m.creditos }} créditos</span></th>
+              <td>{{ 'Recursamiento' if m.tipo == 'recursamiento' else 'Nueva' }}</td>
+              <td>{{ m.motivo }}{% if m.condicionada_a %}<span class="sub">Condicionada a acreditar {{ m.condicionada_nombres|join(' y ') }}.</span>{% endif %}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}<p>No tiene materias pendientes en la retícula.</p>{% endif %}
+    </section>
+
+    <section aria-labelledby="t-kardex">
+      <h2 id="t-kardex">Kárdex sincronizado</h2>
+      <details>
+        <summary>Ver las {{ kardex|length }} inscripciones registradas</summary>
+        <div class="tabla-envoltura">
+          <table>
+            <caption>Tal como se leyó del portal docente, en orden cronológico.</caption>
+            <thead><tr><th scope="col">Periodo</th><th scope="col">Materia</th><th scope="col">Tipo</th><th scope="col" class="num">Oportunidad</th><th scope="col" class="num">Calificación</th><th scope="col">Estatus</th></tr></thead>
+            <tbody>
+            {% for k in kardex %}
+              <tr><td>{{ k.periodo }}</td><th scope="row">{{ k.nombre }}<span class="sub mono">{{ k.clave }}</span></th><td>{{ k.tipo }}</td>
+                <td class="num">{{ k.oportunidad }}</td><td class="num">{{ k.calificacion|int if k.calificacion is not none else '' }}</td><td>{{ k.estatus }}</td></tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </section>
+  </div>
+
+  <div>
+    <section class="panel" aria-labelledby="t-sug" id="sugerencia">
+      <h2 id="t-sug" style="margin-top:0;font-size:1.2rem">Sugerencia de intervención</h2>
+      {% if sugerencia %}
+        <p>{{ sugerencia.texto }}</p>
+        <p class="ayuda">{% if sugerencia.origen == 'gemma' %}Redactada por Gemma 4 a partir del kárdex sin nombre ni matrícula.{% else %}Redactada con la plantilla de SIRA (Gemma 4 no está configurado).{% endif %} Revísala antes de usarla.</p>
+      {% else %}
+        <p class="discreto">{% if gemma_activo() %}Gemma 4 leerá este kárdex sin nombre ni matrícula y te sugerirá qué atender primero.{% else %}Sin Gemma configurado, SIRA usará una plantilla basada en las mismas reglas.{% endif %}</p>
+      {% endif %}
+      <form method="post" action="/tutor/alumno/{{ a.seudonimo }}/sugerencia">
+        <button class="boton {% if sugerencia %}boton--secundario{% endif %}" type="submit">{% if sugerencia %}Generar otra sugerencia{% else %}Generar sugerencia{% endif %}</button>
+      </form>
+    </section>
+
+    <section class="panel" aria-labelledby="t-seg" id="seguimiento">
+      <h2 id="t-seg" style="margin-top:0;font-size:1.2rem">Seguimiento</h2>
+      {% if request.query_params.get('guardado') %}<p class="nota nota--exito" role="status">Seguimiento guardado.</p>{% endif %}
+      <form method="post" action="/tutor/alumno/{{ a.seudonimo }}/seguimiento">
+        <div class="campo"><label class="casilla"><input type="checkbox" name="contactado" value="1" {% if a.contactado %}checked{% endif %}> Ya lo contacté</label></div>
+        <div class="campo"><label for="nota">Nota para el seguimiento</label>
+          <textarea id="nota" name="nota" maxlength="2000" aria-describedby="ayuda-nota">{{ a.nota or '' }}</textarea>
+          <p class="ayuda" id="ayuda-nota">Solo la ves tú. No se envía a Gemma.</p></div>
+        <button class="boton" type="submit">Guardar seguimiento</button>
+      </form>
+    </section>
+  </div>
+</div>
+{% endblock %}

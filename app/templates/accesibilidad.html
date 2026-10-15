@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block titulo %}Accesibilidad{% endblock %}
+{% block contenido %}
+<h1>Cómo probamos la accesibilidad de SIRA</h1>
+<p class="entrada">Cada medida de esta página se puede comprobar: hay pruebas automáticas que cualquiera puede repetir y una lista honesta de lo que falta.</p>
+
+<section aria-labelledby="t-medidas">
+  <h2 id="t-medidas">Medidas aplicadas</h2>
+  <div class="tabla-envoltura">
+    <table>
+      <thead><tr><th scope="col">Medida</th><th scope="col">Cómo comprobarla</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">El semáforo no depende del color: octágono para «Intervenir ya», triángulo para «Dar seguimiento», círculo para «Sin alerta», siempre con texto</th><td>Ve el panel del tutor con el filtro de escala de grises de tu sistema operativo</td></tr>
+        <tr><th scope="row">Contraste de texto WCAG 2.2 nivel AA</th><td>Prueba automática con axe-core (resultados abajo)</td></tr>
+        <tr><th scope="row">Todo se opera con teclado, con foco visible y enlace «Saltar al contenido»</th><td>Pulsa Tab al cargar cualquier página</td></tr>
+        <tr><th scope="row">Tablas con encabezados reales, títulos y regiones con nombre</th><td>Recorre las tablas con un lector de pantalla (NVDA, VoiceOver o TalkBack)</td></tr>
+        <tr><th scope="row">El progreso de la sincronización se anuncia al lector de pantalla cada 25 %</th><td>Sincroniza con el lector de pantalla activo</td></tr>
+        <tr><th scope="row">Lenguaje llano: cada alerta explica su causa en una frase</th><td>Abre el detalle de cualquier alumno</td></tr>
+        <tr><th scope="row">Texto ampliable al 200 % y diseño usable en pantallas de 320 px</th><td>Prueba automática de ancho y ampliación (resultados abajo)</td></tr>
+        <tr><th scope="row">Respeta «reducir movimiento» y el modo de alto contraste del sistema</th><td>Activa esas preferencias en tu sistema</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section aria-labelledby="t-res">
+  <h2 id="t-res">Resultados de las pruebas automáticas</h2>
+  {% if resultados %}
+    <p>Ejecutadas el {{ resultados.fecha }} con axe-core {{ resultados.axe_version }} (reglas WCAG 2.0, 2.1 y 2.2 niveles A y AA) en un navegador Chromium. Para repetirlas: <code>python tests/accesibilidad.py</code>.</p>
+    <div class="tabla-envoltura">
+      <table>
+        <thead><tr><th scope="col">Página</th><th scope="col" class="num">Fallas de axe-core</th><th scope="col">Desplazamiento horizontal a 320 px</th><th scope="col">Foco visible con Tab</th></tr></thead>
+        <tbody>
+        {% for pg in resultados.paginas %}
+          <tr><th scope="row">{{ pg.nombre }}<span class="sub mono">{{ pg.ruta }}</span></th>
+            <td class="num">{{ pg.violaciones }}</td>
+            <td>{{ 'Ninguno' if not pg.desborde_320 else 'Sí, revisar' }}</td>
+            <td>{{ 'Sí' if pg.foco_visible else 'No' }}</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="discreto">Aún no hay resultados. Ejecuta <code>python tests/accesibilidad.py</code>.</p>
+  {% endif %}
+</section>
+
+<section aria-labelledby="t-pend">
+  <h2 id="t-pend">Lo que todavía falta</h2>
+  <ul>
+    <li>Una prueba con tutores reales, incluida al menos una persona usuaria de lector de pantalla.</li>
+    <li>El PDF del oficio incluye título, idioma y estructura de tabla, pero aún no está etiquetado como PDF/UA. El archivo Word sí conserva estilos de encabezado navegables.</li>
+    <li>La réplica del portal imita al portal original y no forma parte de la interfaz de SIRA; no se audita.</li>
+  </ul>
+</section>
+{% endblock %}

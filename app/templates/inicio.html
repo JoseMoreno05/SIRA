@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block titulo %}Inicio{% endblock %}
+{% block contenido %}
+<div class="portada">
+  <section aria-labelledby="t-inicio">
+    <h1 id="t-inicio">Del kárdex al intersemestral, sin revisar alumno por alumno</h1>
+    <p class="entrada">SIRA lee los kárdex de tus tutorados desde el portal docente, te avisa quién necesita intervención y convierte la demanda real por materia en una propuesta de oferta intersemestral lista para revisar.</p>
+    <ol class="ciclo">
+      <li><div><b>El tutor sincroniza sus tutorados</b>Con su propia cuenta del portal, SIRA abre su listado y cada kárdex por él.</div></li>
+      <li><div><b>El semáforo marca a quién atender primero</b>Reglas explícitas: última oportunidad, materias adeudadas y seriación que bloquea el avance.</div></li>
+      <li><div><b>La jefatura ve la demanda de toda la carrera</b>Alumnos que adeudan cada materia, cuántos están en riesgo y cuántas materias destraba.</div></li>
+      <li><div><b>Gemma 4 redacta la propuesta y SIRA la verifica</b>Cada clave, cupo y cifra se compara con la base antes de emitir el borrador del oficio.</div></li>
+    </ol>
+  </section>
+
+  <section class="panel" aria-labelledby="t-perfil">
+    <h2 id="t-perfil" style="margin-top:0">Entrar a la demostración</h2>
+    <p class="discreto">Elige un perfil. No necesitas cuenta: la demo usa una réplica del portal docente con datos sintéticos.</p>
+    <form method="post" action="/entrar">
+      <fieldset style="border:0;padding:0;margin:0">
+        <legend class="solo-lector">Perfil</legend>
+        <div class="perfil">
+          <label class="perfil__opcion"><input type="radio" name="perfil" value="tutor" checked>
+            Soy tutor<span>Ver el semáforo de mis tutorados y registrar el seguimiento.</span></label>
+          <label class="perfil__opcion"><input type="radio" name="perfil" value="gestor">
+            Soy jefatura o gestor académico<span>Ver la demanda por materia y generar la propuesta intersemestral.</span></label>
+        </div>
+      </fieldset>
+      <div class="campo" style="margin-top:1rem">
+        <label for="tutor">Tutor de la demo</label>
+        <select id="tutor" name="tutor">
+          {% for t in tutores %}<option value="{{ t.usuario }}">{{ t.nombre }} ({{ t.usuario }})</option>{% endfor %}
+        </select>
+        <p class="ayuda">Solo aplica si entras como tutor.</p>
+      </div>
+      <button class="boton" type="submit">Entrar</button>
+    </form>
+  </section>
+</div>
+{% endblock %}

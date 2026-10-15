@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% from "_macros.html" import check %}
+{% block titulo %}Propuesta semestral{% endblock %}
+{% block contenido %}
+{% set o = p.contenido.oferta if p else oferta %}
+{% set t = o.totales %}
+{% set cob = o.cobertura %}
+
+{% if not o.materias %}
+  <h1>Aún no hay datos para la oferta semestral</h1>
+  <p class="entrada">La oferta se calcula con la carga sugerida de cada alumno sincronizado. Sincroniza a los tutores desde la página de demanda.</p>
+  <p><a class="boton" href="/gestor">Ir a la demanda por materia</a></p>
+{% else %}
+  <h1>Para el {{ o.nombre|lower }} se sugieren {{ t.grupos }} grupos en {{ t.materias_con_grupo }} materias</h1>
+  <p class="entrada">SIRA arma la carga sugerida de cada uno de los {{ t.alumnos }} alumnos según su kárdex y la seriación, y suma la demanda por materia. Ningún número se teclea a mano.</p>
+
+  {% if cob.tutores_sincronizados < cob.tutores_total %}
+    <p class="nota nota--alerta">Datos de {{ cob.tutores_sincronizados }} de {{ cob.tutores_total }} tutores. Mientras falten tutores, la oferta subestima la demanda real.</p>
+  {% endif %}
+
+  <section class="panel" aria-labelledby="t-prop" id="propuesta" style="margin-top:1.5rem">
+    <h2 id="t-prop" style="margin-top:0">Propuesta para la jefatura</h2>
+    {% if p %}
+      <p class="discreto">{% if p.origen == 'gemma' %}Redactada por Gemma 4 (<span class="mono">{{ p.modelo }}</span>) y verificada por SIRA{% else %}Redactada con la plantilla de SIRA{% endif %} el {{ p.creada | fecha }}.</p>
+      <p>{{ p.contenido.resumen }}</p>
+      {% if p.contenido.observaciones %}
+        <h3>Materias que requieren atención</h3>
+        {% set nombres = {} %}
+        {% for m in o.materias %}{% set _ = nombres.update({m.clave: m.nombre}) %}{% endfor %}
+        <ul>{% for ob in p.contenido.observaciones %}<li><strong>{{ nombres.get(ob.clave, ob.clave) }}:</strong> {{ ob.texto }}</li>{% endfor %}</ul>
+      {% endif %}
+      <details>
+        <summary>Verificaciones ({{ p.validacion.verificaciones | selectattr('ok') | list | length }} de {{ p.validacion.verificaciones|length }} pasaron)</summary>
+        <ul class="checks">
+          {% for ch in p.validacion.verificaciones %}<li>{{ check(ch.ok) }}<div><b>{{ ch.nombre }}</b><span class="discreto">{{ ch.detalle }}</span></div></li>{% endfor %}
+        </ul>
+      </details>
+      <div class="acciones">
+        <a class="boton" href="/gestor/semestral/oficio.pdf" download>Descargar PDF</a>
+        <a class="boton boton--secundario" href="/gestor/semestral/oficio.docx" download>Descargar Word</a>
+        <form method="post" action="/gestor/semestral"><button class="boton boton--secundario" type="submit">Generar de nuevo</button></form>
+      </div>
+    {% else %}
+      <p class="discreto">{% if gemma_activo() %}Gemma 4 redactará el resumen y las observaciones; SIRA verificará cada cifra contra la oferta calculada.{% else %}Sin Gemma configurado, SIRA usará su plantilla de respaldo.{% endif %}</p>
+      <form method="post" action="/gestor/semestral"><button class="boton" type="submit">Generar propuesta semestral</button></form>
+    {% endif %}
+  </section>
+
+  <section aria-labelledby="t-oferta">
+    <h2 id="t-oferta">Oferta por materia</h2>
+    <p>«Seguros» ya cumplen la seriación. «Condicionados» dependen de acreditar una materia que cursan hoy; SIRA los cuenta según la probabilidad histórica de acreditarla. Cupo por grupo: de {{ o.parametros.cupo_minimo }} a {{ o.parametros.cupo_maximo_grupo }} alumnos.</p>
+    <div class="tabla-envoltura">
+      <table>
+        <caption>Materias que aparecen en al menos una carga sugerida, agrupadas por semestre de la retícula.</caption>
+        <thead><tr>
+          <th scope="col">Materia</th><th scope="col" class="num">Seguros</th><th scope="col" class="num">Condicionados</th>
+          <th scope="col" class="num">Demanda esperada</th><th scope="col" class="num">Recursan</th>
+          <th scope="col" class="num">En riesgo alto</th><th scope="col">Recomendación</th>
+        </tr></thead>
+        {% for sem, filas in o.materias | groupby('semestre') %}
+        <tbody>
+          <tr class="fila-grupo"><th scope="rowgroup" colspan="7">Semestre {{ sem }}</th></tr>
+          {% for m in filas %}
+          <tr>
+            <th scope="row">{{ m.nombre }}<span class="sub mono">{{ m.clave }}</span></th>
+            <td class="num">{{ m.seguros }}</td><td class="num">{{ m.condicionados }}</td>
+            <td class="num"><strong>{{ m.demanda_esperada }}</strong></td>
+            <td class="num">{{ m.recursan }}</td><td class="num">{{ m.en_riesgo }}</td>
+            <td>{% if m.abre %}<span class="etiqueta">{{ m.recomendacion }}</span>{% else %}<span class="etiqueta etiqueta--no">Sin grupo</span><span class="sub">{{ m.recomendacion }}</span>{% endif %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        {% endfor %}
+      </table>
+    </div>
+  </section>
+
+  <section aria-labelledby="t-reglas">
+    <h2 id="t-reglas">Cómo se arma la carga de cada alumno</h2>
+    <ol>
+      <li>Primero, las materias que adeuda y no cursa hoy, empezando por las que están en su última oportunidad.</li>
+      <li>Después, las materias nuevas cuya seriación ya cumple, de los semestres más bajos primero y priorizando las que destraban más materias.</li>
+      <li>Límite de {{ o.parametros.carga_max_materias }} materias y {{ o.parametros.carga_max_creditos }} créditos; los alumnos en riesgo alto llevan como máximo {{ o.parametros.carga_max_materias_riesgo }} materias.</li>
+    </ol>
+    <p class="discreto">No incluye alumnos de nuevo ingreso. Cada tutor ve la carga sugerida de sus tutorados en el detalle del alumno.</p>
+  </section>
+{% endif %}
+{% endblock %}

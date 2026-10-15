@@ -1,0 +1,32 @@
+{
+  "_nota": "Umbrales de demostración. Ajustar al reglamento escolar vigente de la institución antes de un piloto.",
+  "escala": {"minima_aprobatoria": 6, "maxima": 10},
+  "oportunidades_max": 3,
+  "nombres_oportunidad": {"1": "Ordinario", "2": "Extraordinario", "3": "Recursamiento"},
+  "periodo_actual": "2026-2",
+  "intersemestral": "Intersemestral de invierno 2026–2027",
+  "semaforo": {
+    "rojo_adeudadas_min": 3,
+    "rojo_bloqueo_min": 12,
+    "amarillo_adeudadas_min": 1,
+    "amarillo_caida_promedio": 1.0
+  },
+  "demanda": {
+    "beta": 0.5,
+    "gamma": 0.5,
+    "cupo_minimo": 6,
+    "cupo_maximo_grupo": 30,
+    "grupos_max": 6,
+    "top_n": 20,
+    "periodos_historia": 3
+  },
+  "semestral": {
+    "periodo": "2027-1",
+    "nombre": "Semestre enero–junio 2027",
+    "carga_max_materias": 6,
+    "carga_max_materias_riesgo": 4,
+    "carga_max_creditos": 46,
+    "cupo_minimo": 10,
+    "cupo_maximo_grupo": 35
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "_nota": "Rutas y selectores CSS del portal. Los valores de la réplica se ajustan al portal real a partir de copias guardadas de sus páginas (sin datos personales).",
+  "login": {
+    "ruta_formulario": "/",
+    "ruta_envio": "/login.php",
+    "campo_usuario": "usuario",
+    "campo_contrasena": "contrasena",
+    "indicador_sesion_ok": "#menuPrincipal"
+  },
+  "listado": {
+    "ruta": "/tutorias/listado.php",
+    "filas": "table#tablaTutorados tbody tr",
+    "col_matricula": "td.matricula",
+    "col_nombre": "td.nombre",
+    "col_programa": "td.programa",
+    "col_semestre": "td.semestre",
+    "enlace_kardex": "a.verKardex"
+  },
+  "kardex": {
+    "tabla": "table.kardex",
+    "filas": "table.kardex tbody tr",
+    "columnas": ["clave", "asignatura", "creditos", "semestre", "periodo", "tipo", "calificacion", "estatus"],
+    "bloque_identidad": "div.datosAlumno"
+  }
+}
